@@ -42,20 +42,22 @@ class Cartesian_tree(Mapping):
         pass
 
 
-@pytest.mark.parametrize("register,name,expected", [
-    (MAPPING_REGISTRY1, "bst", BST),
-    (MAPPING_REGISTRY2, "avl_tree", AVLTree),
-])
+@pytest.mark.parametrize(
+    "register,name,expected",
+    [
+        (MAPPING_REGISTRY1, "bst", BST),
+        (MAPPING_REGISTRY2, "avl_tree", AVLTree),
+    ],
+)
 def test_register(register, name, expected):
     assert name in register._registry_storage
     assert issubclass(register._registry_storage[name], expected)
 
 
-@pytest.mark.parametrize("register,name,expected", [
-    (MAPPING_REGISTRY1, "bst", BST),
-    (MAPPING_REGISTRY1, "test1", dict),
-    (MAPPING_REGISTRY2, "avl_tree", AVLTree)
-])
+@pytest.mark.parametrize(
+    "register,name,expected",
+    [(MAPPING_REGISTRY1, "bst", BST), (MAPPING_REGISTRY1, "test1", dict), (MAPPING_REGISTRY2, "avl_tree", AVLTree)],
+)
 def test_dispatch(register, name, expected):
     actual = register.dispatch(name)()
     assert isinstance(actual, expected)
@@ -63,6 +65,7 @@ def test_dispatch(register, name, expected):
 
 def test_raise_exception_register():
     with pytest.raises(ValueError):
+
         @MAPPING_REGISTRY1.register("bst")
         class Test(Mapping):
             def __getitem__(self, item):
