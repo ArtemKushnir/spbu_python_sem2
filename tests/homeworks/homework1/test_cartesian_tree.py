@@ -45,11 +45,6 @@ class TestCartesianTree:
         check_recursion(tree.root)
         return True
 
-    def test_is_empty(self):
-        first_tree = self.create_treap(0)[0]
-        second_tree = self.create_treap(100)[0]
-        assert first_tree._is_empty() and not second_tree._is_empty()
-
     @pytest.mark.parametrize(
         "items",
         [
@@ -97,14 +92,30 @@ class TestCartesianTree:
             assert not new_tree.__contains__(randint(1500, 10000))
 
     @pytest.mark.parametrize("cnt", [10, 50, 100, 1000])
-    def test_del_item(self, cnt):
+    def test_delitem(self, cnt):
         new_tree, items = self.create_treap(cnt)
-        del_keys = choices(list(items.keys()), k=randint(0, cnt))
+        del_keys = set(choices(list(items.keys()), k=randint(1, cnt)))
         for key in del_keys:
-            if new_tree.__contains__(key):
-                del new_tree[key]
+            del new_tree[key]
+
+        for key, value in items.items():
+            if key not in del_keys:
+                assert new_tree[key] == value
+            else:
+                assert not new_tree.__contains__(key)
+
+    @pytest.mark.parametrize("cnt", [10, 50, 100, 1000])
+    def test_pop(self, cnt):
+        new_tree, items = self.create_treap(cnt)
+        del_keys = set(choices(list(items.keys()), k=randint(1, cnt)))
         for key in del_keys:
-            assert not new_tree.__contains__(key)
+            assert new_tree.pop(key) == items[key]
+
+        for key, value in items.items():
+            if key not in del_keys:
+                assert new_tree[key] == value
+            else:
+                assert not new_tree.__contains__(key)
 
     @pytest.mark.parametrize("cnt", [10, 50, 100, 1000])
     def test_iter(self, cnt):

@@ -70,11 +70,8 @@ class CartesianTree(MutableMapping, Generic[Key, Value]):
         self.root: Optional[Node[Key, Value]] = None
         self.size: int = 0
 
-    def _is_empty(self) -> bool:
-        return self.size == 0
-
     def __setitem__(self, key: Key, value: Value) -> None:
-        if self._is_empty():
+        if self.root is None:
             self.root = Node(key, value)
             self.size = 1
         else:
@@ -131,20 +128,19 @@ class CartesianTree(MutableMapping, Generic[Key, Value]):
         raise TypeError
 
     def __delitem__(self, key: Key) -> None:
-        if not self.__contains__(key):
-            raise KeyError
-        smaller_root, bigger_root = self.split(self.root, key)
-        if bigger_root is not None:
-            if bigger_root.key == key:
-                self.root = smaller_root
+        def del_recursion(curr_node: Optional[Node[Key, Value]]) -> Optional[Node[Key, Value]]:
+            if curr_node is None:
+                raise KeyError
+            elif curr_node.key < key:
+                curr_node.right = del_recursion(curr_node.right)
+            elif curr_node.key > key:
+                curr_node.left = del_recursion(curr_node.left)
             else:
-                curr_node = bigger_root
-                while curr_node.left is not None:
-                    parent_root = curr_node
-                    curr_node = curr_node.left
-                parent_root.left = None
-                self.root = self.merge(smaller_root, bigger_root)
-            self.size -= 1
+                return self.merge(curr_node.left, curr_node.right)
+            return curr_node
+
+        self.root = del_recursion(self.root)
+        self.size -= 1
 
     def pop(self, __key: Key, default: Any = None) -> Value:
         try:
