@@ -1,5 +1,5 @@
 from collections import Counter, OrderedDict, UserDict, defaultdict
-from typing import Callable, Generic, Optional, Type, TypeVar
+from typing import Callable, Generic, MutableMapping, Optional, Type, TypeVar
 
 R = TypeVar("R")
 
@@ -9,7 +9,7 @@ class Registry(Generic[R]):
         self._default: Optional[Type[R]] = default
         self._registry_storage: dict[str, Type[R]] = {}
 
-    def register(self, name: str) -> Callable:
+    def register(self, name: str) -> Callable[[Type[R]], Type[R]]:
         if name in self._registry_storage:
             raise ValueError("This name is already reserved")
 
@@ -27,7 +27,7 @@ class Registry(Generic[R]):
 
 
 def main() -> None:
-    mapping_registry = Registry[dict](dict)
+    mapping_registry = Registry[MutableMapping](dict)
     mapping_registry.register("default_dict")(defaultdict)
     mapping_registry.register("ordered_dict")(OrderedDict)
     mapping_registry.register("user_dict")(UserDict)
