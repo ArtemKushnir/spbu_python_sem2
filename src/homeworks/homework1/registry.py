@@ -10,10 +10,9 @@ class Registry(Generic[R]):
         self._registry_storage: dict[str, Type[R]] = {}
 
     def register(self, name: str) -> Callable[[Type[R]], Type[R]]:
-        if name in self._registry_storage:
-            raise ValueError("This name is already reserved")
-
         def _decorator(cls: Type[R]) -> Type[R]:
+            if name in self._registry_storage:
+                raise ValueError("This name is already reserved")
             self._registry_storage[name] = cls
             return cls
 

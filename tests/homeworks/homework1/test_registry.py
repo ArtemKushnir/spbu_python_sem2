@@ -46,7 +46,7 @@ class TestRegistryWithDefault:
 
     def test_raise_exception_register(self):
         with pytest.raises(ValueError):
-            self.MAPPING_REGISTRY1.register("bst")
+            self.MAPPING_REGISTRY1.register("bst")(AVLTree)
 
 
 class TestRegistry:
@@ -77,4 +77,4 @@ class TestRegistry:
 
     def test_raise_exception_register(self):
         with pytest.raises(ValueError):
-            self.MAPPING_REGISTRY2.register("avl")
+            self.MAPPING_REGISTRY2.register("avl")(BST)
