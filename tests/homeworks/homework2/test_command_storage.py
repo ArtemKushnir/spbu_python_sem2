@@ -5,9 +5,8 @@ import pytest
 from hypothesis import given
 
 from src.homeworks.homework2.command_storage import *
-from src.homeworks.homework2.command_storage import _create_info
 
-INFO = _create_info(Action)
+INFO = create_info(Action)
 
 
 class TestInsertLeft:

@@ -222,7 +222,7 @@ def _create_registry(registry: Registry, parent_class: Type[Action]) -> Registry
     return registry
 
 
-def _create_info(parent_class: Type) -> str:
+def create_info(parent_class: Type) -> str:
     info = ""
     cnt = 1
     for cls in parent_class.__subclasses__():
@@ -237,7 +237,7 @@ def main() -> None:
     user_collection = eval(input("For example [], {1, 2, 3}: "))
     user_storage: PerformedCommandStorage = PerformedCommandStorage(user_collection)
     registry = _create_registry(Registry[Action](), Action)
-    info = _create_info(Action)
+    info = create_info(Action)
     print(info)
     user_request = input("write your request: ")
     while user_request != "exit":
