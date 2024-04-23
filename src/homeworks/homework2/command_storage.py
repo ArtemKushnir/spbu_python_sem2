@@ -1,0 +1,272 @@
+from typing import Collection, Generic, MutableSequence, MutableSet, Optional, Type, TypeVar
+
+from src.homeworks.homework1.registry import Registry
+
+T = TypeVar("T", bound=Collection)
+
+
+class ActionIndexError(Exception):
+    pass
+
+
+class CollectionError(Exception):
+    pass
+
+
+class Action(Generic[T]):
+    collection_type: type[T]
+
+    def do_action(self, numbers: T) -> None:
+        raise NotImplementedError
+
+    def undo_action(self, numbers: T) -> None:
+        raise NotImplementedError
+
+
+class MutableSequenceAction(Action):
+    collection_type = MutableSequence
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        raise NotImplementedError
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        raise NotImplementedError
+
+
+class MutableSetAction(Action):
+    collection_type = MutableSet
+
+    def do_action(self, numbers: MutableSet) -> None:
+        raise NotImplementedError
+
+    def undo_action(self, numbers: MutableSet) -> None:
+        raise NotImplementedError
+
+
+class InsertLeft(MutableSequenceAction):
+    """insert_left --value (add an element to the beginning)"""
+
+    def __init__(self, value: int):
+        self.value: int = value
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        numbers.insert(0, self.value)
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        numbers.pop(0)
+
+
+class InsertRight(MutableSequenceAction):
+    """insert_right --value (add an element to the end)"""
+
+    def __init__(self, number: int):
+        self.number: int = number
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        numbers.append(self.number)
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        numbers.pop()
+
+
+class MoveElement(MutableSequenceAction):
+    """move_element --i --j (move element from i to j position)"""
+
+    def __init__(self, first_index: int, second_index: int):
+        self.first_index: int = first_index
+        self.second_index: int = second_index
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        elem = numbers.pop(self.first_index)
+        numbers.insert(self.second_index, elem)
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        elem = numbers.pop(self.second_index)
+        numbers.insert(self.first_index, elem)
+
+
+class AddValue(MutableSequenceAction):
+    """add_value --i --value (Add value to the element at position i)"""
+
+    def __init__(self, index: int, value: int):
+        self.index: int = index
+        self.value: int = value
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        numbers[self.index] += self.value
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        numbers[self.index] -= self.value
+
+
+class Reverse(MutableSequenceAction):
+    """reverse (expand your collection)"""
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        numbers.reverse()
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        self.do_action(numbers)
+
+
+class Swap(MutableSequenceAction):
+    """swap --i --j (swap elements at i and j positions)"""
+
+    def __init__(self, first_index: int, second_index: int):
+        self.first_index: int = first_index
+        self.second_index: int = second_index
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        numbers[self.first_index], numbers[self.second_index] = numbers[self.second_index], numbers[self.first_index]
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        self.do_action(numbers)
+
+
+class Add(MutableSetAction):
+    """add --value (add an element to the collection)"""
+
+    def __init__(self, value: int) -> None:
+        self.value: int = value
+
+    def do_action(self, numbers: MutableSet) -> None:
+        numbers.add(self.value)
+
+    def undo_action(self, numbers: MutableSet) -> None:
+        numbers.remove(self.value)
+
+
+class Pop(MutableSequenceAction):
+    """pop --i (remove element at i position)"""
+
+    def __init__(self, index: int):
+        self.index: int = index
+        self.value: Optional[int] = None
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        self.value = numbers.pop(self.index)
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        numbers.insert(self.index, self.value)
+
+
+class Clear(MutableSequenceAction):
+    """clear (clear collection)"""
+
+    def __init__(self) -> None:
+        self.numbers: Optional[MutableSequence] = None
+
+    def do_action(self, numbers: MutableSequence) -> None:
+        self.numbers = type(numbers)()
+        self.numbers.extend(numbers)
+        numbers.clear()
+
+    def undo_action(self, numbers: MutableSequence) -> None:
+        if self.numbers is not None:
+            numbers.extend(self.numbers)
+
+
+class Discard(MutableSetAction):
+    """discard --value (remove value without raising exceptions)"""
+
+    def __init__(self, value: int) -> None:
+        self.value: int = value
+        self.delete: bool = False
+
+    def do_action(self, numbers: MutableSet) -> None:
+        if self.value in numbers:
+            self.delete = True
+        numbers.discard(self.value)
+
+    def undo_action(self, numbers: MutableSet) -> None:
+        if self.delete:
+            numbers.add(self.value)
+
+
+class PopRandom(MutableSetAction):
+    """pop_random (removes a random value)"""
+
+    def __init__(self) -> None:
+        self.pop_value: Optional[int] = None
+
+    def do_action(self, numbers: MutableSet) -> None:
+        self.pop_value = numbers.pop()
+
+    def undo_action(self, numbers: MutableSet) -> None:
+        numbers.add(self.pop_value)
+
+
+class PerformedCommandStorage(Generic[T]):
+    def __init__(self, numbers_collection: T):
+        self.actions: list[Action] = []
+        self.numbers: T = numbers_collection
+
+    def apply(self, action: Action) -> None:
+        if not any(isinstance(self.numbers, getattr(cls, "collection_type")) for cls in type(action).__bases__):
+            raise CollectionError("This collection does not support this action")
+        action.do_action(self.numbers)
+        self.actions.append(action)
+
+    def cancel(self) -> None:
+        if len(self.actions) > 0:
+            self.actions[-1].undo_action(self.numbers)
+            self.actions.pop()
+        else:
+            raise ActionIndexError("No action was performed")
+
+
+def _create_registry(registry: Registry, parent_class: Type[Action]) -> Registry:
+    for cls in parent_class.__subclasses__():
+        for action in cls.__subclasses__():
+            registry.register(action.__name__.lower())(action)
+    return registry
+
+
+def _create_info(parent_class: Type) -> str:
+    info = ""
+    cnt = 1
+    for cls in parent_class.__subclasses__():
+        for action in cls.__subclasses__():
+            info += f"{cnt}. {action.__doc__}\n"
+            cnt += 1
+    return info
+
+
+def main() -> None:
+    print("Write your collection")
+    user_collection = eval(input("For example [], {1, 2, 3}: "))
+    user_storage: PerformedCommandStorage = PerformedCommandStorage(user_collection)
+    registry = _create_registry(Registry[Action](), Action)
+    info = _create_info(Action)
+    print(info)
+    user_request = input("write your request: ")
+    while user_request != "exit":
+        if user_request == "info":
+            print(info)
+        elif user_request == "cancel":
+            try:
+                user_storage.cancel()
+            except ActionIndexError as e:
+                print(e)
+            else:
+                print("Result:", user_storage.numbers)
+        else:
+            action, *arguments = user_request.replace("_", "").split("--")
+            arguments = map(int, arguments)
+            try:
+                user_storage.apply(registry.dispatch(action.strip())(*arguments))
+            except IndexError:
+                print("Indexes are incorrectly specified")
+            except ValueError:
+                print("Invalid request")
+            except TypeError:
+                print("The request has an incorrect number of arguments")
+            except CollectionError as e:
+                print(e)
+            else:
+                print("Result:", user_storage.numbers)
+        user_request = input("Write your request: ")
+
+
+if __name__ == "__main__":
+    main()
