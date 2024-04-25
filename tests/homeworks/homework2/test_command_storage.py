@@ -4,7 +4,7 @@ import hypothesis.strategies as st
 import pytest
 from hypothesis import given
 
-from src.homeworks.homework2.command_storage import *
+from src.homeworks.homework2.main import *
 
 INFO = create_info(Action)
 
