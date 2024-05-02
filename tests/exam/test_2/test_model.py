@@ -3,7 +3,7 @@ import asyncio
 import pytest
 import requests
 
-from src.tests.test_2.model import QuotesModel
+from src.exam.test_2.model import QuotesModel
 
 
 class TestModel:
