@@ -1,5 +1,6 @@
 import asyncio
-from tkinter import Tk
+import tkinter
+from tkinter import Tk, messagebox
 
 from model import QuotesModel
 from viewmodel import MainViewModel
@@ -28,6 +29,10 @@ class App:
     async def update(self) -> None:
         while True:
             self._root.update()
+            try:
+                self._root.state()
+            except tkinter.TclError:
+                break
             await asyncio.sleep(0)
 
     def start(self) -> None:
