@@ -64,7 +64,9 @@ def main(size_arr: int, num_threads: list[int], output_path: str, multiprocess: 
 
     random_arr = [random.randint(0, 100000) for _ in range(size_arr)]
     for cnt_threads in num_threads:
-        sort_time = check_time(sort.parallel_sort)(random_arr, cnt_threads, PROCESS_POOL if multiprocess else THREAD_POOL)
+        sort_time = check_time(sort.parallel_sort)(
+            random_arr, cnt_threads, PROCESS_POOL if multiprocess else THREAD_POOL
+        )
         parallel_sort_time.append(sort_time)
     base_sort_time = [check_time(sort.base_sort)(random_arr)] * len(parallel_sort_time)
 
