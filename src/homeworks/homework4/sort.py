@@ -40,7 +40,7 @@ class MergeSort:
     def supporting_func(self, array_to_merge: tuple[list[int], list[int]]) -> list[int]:
         return self.merge(array_to_merge[0], array_to_merge[1])
 
-    def parallel_sort(self, array: list[int], n_jobs: int, executor_pool: Callable) -> list[int]:
+    def parallel_sort_second_realisation(self, array: list[int], n_jobs: int, executor_pool: Callable) -> list[int]:
         task_per_worker = ceil(len(array) / n_jobs)
         task_per_worker = task_per_worker if task_per_worker else 1
         sublist = (array[i : i + task_per_worker] for i in range(0, len(array), task_per_worker))
@@ -50,6 +50,16 @@ class MergeSort:
                 results.append([])
                 results = list(executor.map(self.supporting_func, zip(*[iter(results)] * 2)))
         return results[0] if len(results) == 1 else results
+
+    def parallel_sort_first_realisation(self, array: list[int], n_jobs: int, executor_pool: Callable) -> list[int]:
+        task_per_worker = ceil(len(array) / n_jobs)
+        task_per_worker = task_per_worker if task_per_worker else 1
+        sublist = (array[i : i + task_per_worker] for i in range(0, len(array), task_per_worker))
+        with executor_pool(max_workers=n_jobs) as executor:
+            results: list[int] = []
+            for curr_array in executor.map(self.base_sort, sublist):
+                results = self.merge(results, curr_array)
+        return results
 
 
 def check_time(func: Callable, n_iter: int) -> Callable:
@@ -71,7 +81,7 @@ def main(size_arr: int, num_threads: list[int], output_path: str, multiprocess: 
 
     random_arr = [random.randint(0, 100000) for _ in range(size_arr)]
     for cnt_threads in num_threads:
-        sort_time = check_time(sort.parallel_sort, 10)(
+        sort_time = check_time(sort.parallel_sort_first_realisation, 10)(
             random_arr, cnt_threads, PROCESS_POOL if multiprocess else THREAD_POOL
         )
         parallel_sort_time.append(sort_time)

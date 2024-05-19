@@ -23,14 +23,27 @@ class TestMergeSort:
         assert actual == test_array
 
     @given(st.lists(st.integers()), st.integers(1, 1000))
-    def test_thread_sort(self, test_array, n_jobs):
-        actual = self.sort.parallel_sort(test_array, n_jobs, THREAD_POOL)
+    def test_thread_sort_first_realisation(self, test_array, n_jobs):
+        actual = self.sort.parallel_sort_first_realisation(test_array, n_jobs, THREAD_POOL)
         test_array.sort()
         assert actual == test_array
 
     @given(st.lists(st.integers()), st.integers(1, 100))
     @settings(deadline=10**10)
-    def test_process_sort(self, test_array, n_jobs):
-        actual = self.sort.parallel_sort(test_array, n_jobs, PROCESS_POOL)
+    def test_process_sort_first_realisation(self, test_array, n_jobs):
+        actual = self.sort.parallel_sort_first_realisation(test_array, n_jobs, PROCESS_POOL)
+        test_array.sort()
+        assert actual == test_array
+
+    @given(st.lists(st.integers()), st.integers(1, 1000))
+    def test_thread_sort_second_realisation(self, test_array, n_jobs):
+        actual = self.sort.parallel_sort_second_realisation(test_array, n_jobs, THREAD_POOL)
+        test_array.sort()
+        assert actual == test_array
+
+    @given(st.lists(st.integers()), st.integers(1, 100))
+    @settings(deadline=10 ** 10)
+    def test_process_sort_second_realisation(self, test_array, n_jobs):
+        actual = self.sort.parallel_sort_second_realisation(test_array, n_jobs, PROCESS_POOL)
         test_array.sort()
         assert actual == test_array
