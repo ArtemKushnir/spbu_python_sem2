@@ -42,7 +42,7 @@ class TestMergeSort:
         assert actual == test_array
 
     @given(st.lists(st.integers()), st.integers(1, 100))
-    @settings(deadline=10 ** 10)
+    @settings(deadline=10**10)
     def test_process_sort_second_realisation(self, test_array, n_jobs):
         actual = self.sort.parallel_sort_second_realisation(test_array, n_jobs, PROCESS_POOL)
         test_array.sort()
