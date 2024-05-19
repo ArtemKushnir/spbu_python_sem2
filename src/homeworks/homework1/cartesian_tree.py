@@ -1,20 +1,18 @@
-from abc import ABCMeta, abstractmethod
 from random import random
-from typing import Any, Callable, Generic, Iterator, MutableMapping, Optional, TypeVar
+from typing import Any, Generic, Iterable, Iterator, MutableMapping, Optional, Protocol, Type, TypeVar
 
 
-class Comparable(metaclass=ABCMeta):
-    @abstractmethod
-    def __lt__(self, other: Any) -> bool:
-        ...
-
-    @abstractmethod
+class Comparable(Protocol):
     def __gt__(self, other: Any) -> bool:
         ...
 
 
 Key = TypeVar("Key", bound=Comparable)
 Value = TypeVar("Value")
+
+
+class EmptyTreeError(Exception):
+    pass
 
 
 class Node(Generic[Key, Value]):
@@ -37,32 +35,27 @@ class Node(Generic[Key, Value]):
 
 
 class Comparator:
-    def create_comparator(self) -> filter:
+    @staticmethod
+    def create_comparator(node: Node[Key, Value]) -> Iterable:
         raise NotImplementedError
 
 
 class PreorderComparator(Comparator):
-    def __init__(self, node: Node[Key, Value]) -> None:
-        self.node: Node[Key, Value] = node
-
-    def create_comparator(self) -> filter:
-        return filter(None, (self.node, self.node.left, self.node.right))
+    @staticmethod
+    def create_comparator(node: Node[Key, Value]) -> Iterable:
+        return filter(None, (node, node.left, node.right))
 
 
 class InorderComparator(Comparator):
-    def __init__(self, node: Node[Key, Value]) -> None:
-        self.node: Node[Key, Value] = node
-
-    def create_comparator(self) -> filter:
-        return filter(None, (self.node.left, self.node, self.node.right))
+    @staticmethod
+    def create_comparator(node: Node[Key, Value]) -> Iterable:
+        return filter(None, (node.left, node, node.right))
 
 
 class PostorderComparator(Comparator):
-    def __init__(self, node: Node[Key, Value]) -> None:
-        self.node: Node[Key, Value] = node
-
-    def create_comparator(self) -> filter:
-        return filter(None, (self.node.left, self.node.right, self.node))
+    @staticmethod
+    def create_comparator(node: Node[Key, Value]) -> Iterable:
+        return filter(None, (node.left, node.right, node))
 
 
 class CartesianTree(MutableMapping, Generic[Key, Value]):
@@ -74,37 +67,29 @@ class CartesianTree(MutableMapping, Generic[Key, Value]):
         if self.root is None:
             self.root = Node(key, value)
             self.size = 1
-        else:
-            node = self._find_node(key)
-            if node is not None:
-                node.value = value
-            else:
-                smaller_root, bigger_root = self.split(self.root, key)
-                smaller_root = self.merge(smaller_root, Node(key, value))
-                self.root = self.merge(smaller_root, bigger_root)
-                self.size += 1
+            return
+        node = self._find_node(key)
+        if node is not None:
+            node.value = value
+            return
+        smaller_root, bigger_root = self.split(self.root, key)
+        smaller_root = self.merge(smaller_root, Node(key, value))
+        self.root = self.merge(smaller_root, bigger_root)
+        self.size += 1
 
     def __getitem__(self, key: Key) -> Value:
         node = self._find_node(key)
         if node is not None:
             return node.value
-        raise KeyError
-
-    def get(self, key: Key, default: Any = None) -> Value:
-        try:
-            return self[key]
-        except KeyError:
-            if default is not None:
-                return default
-            raise KeyError
+        raise KeyError("There is no such key")
 
     def traverse(self, order: str = "inorder") -> list[tuple[Key, Value]]:
         items: list[tuple[Key, Value]] = []
         if self.root is None:
             return items
 
-        def traverse_recursion(curr_node: Node[Key, Value], order_func: Callable) -> None:
-            node_order = order_func(curr_node).create_comparator()
+        def traverse_recursion(curr_node: Node[Key, Value], order_func: Type[Comparator]) -> None:
+            node_order = order_func.create_comparator(curr_node)
             for node in node_order:
                 if node is not curr_node:
                     traverse_recursion(node, order_func)
@@ -125,12 +110,12 @@ class CartesianTree(MutableMapping, Generic[Key, Value]):
     def __iter__(self) -> Iterator[Key]:
         if self.root is not None:
             return iter(self.root)
-        raise TypeError
+        raise EmptyTreeError("Tree is empty")
 
     def __delitem__(self, key: Key) -> None:
         def del_recursion(curr_node: Optional[Node[Key, Value]]) -> Optional[Node[Key, Value]]:
             if curr_node is None:
-                raise KeyError
+                raise KeyError("There is no such key")
             elif curr_node.key < key:
                 curr_node.right = del_recursion(curr_node.right)
             elif curr_node.key > key:
@@ -142,15 +127,15 @@ class CartesianTree(MutableMapping, Generic[Key, Value]):
         self.root = del_recursion(self.root)
         self.size -= 1
 
-    def pop(self, __key: Key, default: Any = None) -> Value:
+    def pop(self, key: Key, default: Any = None) -> Value:
         try:
-            value = self[__key]
-            del self[__key]
+            value = self[key]
+            del self[key]
             return value
         except KeyError:
             if default is not None:
                 return default
-            raise KeyError
+            raise KeyError("There is no such key")
 
     def __contains__(self, key: object) -> bool:
         return self._find_node(key) is not None
@@ -168,43 +153,33 @@ class CartesianTree(MutableMapping, Generic[Key, Value]):
 
     @staticmethod
     def split(
-        tree_root: Optional[Node[Key, Value]], key: Key
+        curr_node: Optional[Node[Key, Value]], key: Key
     ) -> tuple[Optional[Node[Key, Value]], Optional[Node[Key, Value]]]:
-        def recursion_split(
-            curr_node: Optional[Node[Key, Value]]
-        ) -> tuple[Optional[Node[Key, Value]], Optional[Node[Key, Value]]]:
-            if curr_node is None:
-                return None, None
-            elif curr_node.key < key:
-                smaller_node, bigger_node = recursion_split(curr_node.right)
-                curr_node.right = smaller_node
-                return curr_node, bigger_node
-            else:
-                smaller_node, bigger_node = recursion_split(curr_node.left)
-                curr_node.left = bigger_node
-                return smaller_node, curr_node
-
-        return recursion_split(tree_root)
+        if curr_node is None:
+            return None, None
+        elif curr_node.key < key:
+            left_node, right_node = CartesianTree.split(curr_node.right, key)
+            curr_node.right = left_node
+            return curr_node, right_node
+        else:
+            left_node, right_node = CartesianTree.split(curr_node.left, key)
+            curr_node.left = right_node
+            return left_node, curr_node
 
     @staticmethod
     def merge(
-        first_tree_root: Optional[Node[Key, Value]], second_tree_root: Optional[Node[Key, Value]]
+        left_node: Optional[Node[Key, Value]], right_node: Optional[Node[Key, Value]]
     ) -> Optional[Node[Key, Value]]:
-        def recursion_merge(
-            curr_node1: Optional[Node[Key, Value]], curr_node2: Optional[Node[Key, Value]]
-        ) -> Optional[Node[Key, Value]]:
-            if curr_node1 is None:
-                return curr_node2
-            elif curr_node2 is None:
-                return curr_node1
-            elif curr_node1.priority > curr_node2.priority:
-                curr_node1.right = recursion_merge(curr_node1.right, curr_node2)
-                return curr_node1
-            elif curr_node1.priority < curr_node2.priority:
-                curr_node2.left = recursion_merge(curr_node1, curr_node2.left)
-                return curr_node2
-
-        return recursion_merge(first_tree_root, second_tree_root)
+        if left_node is None:
+            return right_node
+        elif right_node is None:
+            return left_node
+        elif left_node.priority > right_node.priority:
+            left_node.right = CartesianTree.merge(left_node.right, right_node)
+            return left_node
+        elif left_node.priority < right_node.priority:
+            right_node.left = CartesianTree.merge(left_node, right_node.left)
+            return right_node
 
     def __str__(self) -> str:
         result = f"Cartesian Tree\nsize = {self.size}\nitems in symmetrical order:\n"

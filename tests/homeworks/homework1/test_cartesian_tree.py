@@ -70,14 +70,6 @@ class TestCartesianTree:
         for key in items.keys():
             assert new_tree[key] == items[key]
 
-    def test_get_with_default(self):
-        cnt, default = 100, "error"
-        new_tree, items = self.create_treap(cnt)
-        for key in items.keys():
-            assert new_tree.get(key, default) == items[key]
-        for i in range(cnt):
-            assert new_tree.get(randint(1500, 10000), default) == default
-
     @pytest.mark.parametrize("cnt", [10, 50, 100, 1000, 1500, 2000, 5678, 10934])
     def test_len(self, cnt):
         new_tree, items = self.create_treap(cnt)
@@ -182,13 +174,6 @@ class TestCartesianTree:
         for i in range(cnt):
             with pytest.raises(KeyError):
                 return new_tree[randint(1001, 100000)]
-
-    def test_exception_raises_get(self):
-        cnt = 100
-        new_tree = self.create_treap(cnt)[0]
-        for i in range(cnt):
-            with pytest.raises(KeyError):
-                new_tree.get(randint(1001, 100000))
 
     def test_exception_raises_delitem(self):
         cnt = 100
