@@ -1,4 +1,5 @@
 import random
+import statistics
 import time
 from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -36,24 +37,30 @@ class MergeSort:
         right = self.base_sort(array[mid:])
         return self.merge(left, right)
 
+    def supporting_func(self, array_to_merge):
+        return self.merge(array_to_merge[0], array_to_merge[1])
+
     def parallel_sort(self, array: list[int], n_jobs: int, executor_pool: Callable) -> list[int]:
         task_per_worker = ceil(len(array) / n_jobs)
         task_per_worker = task_per_worker if task_per_worker else 1
         sublist = (array[i : i + task_per_worker] for i in range(0, len(array), task_per_worker))
         with executor_pool(max_workers=n_jobs) as executor:
-            results = executor.map(self.base_sort, sublist)
-            merged: list[int] = []
-            for sort_sublist in results:
-                merged = self.merge(merged, sort_sublist)
-        return merged
+            results = list(executor.map(self.base_sort, sublist))
+            while len(results) > 1:
+                results.append([])
+                results = list(executor.map(self.supporting_func, zip(*[iter(results)] * 2)))
+        return results[0] if len(results) == 1 else results
 
 
-def check_time(func: Callable) -> Callable:
+def check_time(func: Callable, n_iter: int) -> Callable:
     def inner(*args: int, **kwargs: int) -> float:
-        start = time.perf_counter()
-        func(*args, **kwargs)
-        end = time.perf_counter()
-        return end - start
+        sort_time = []
+        for i in range(n_iter):
+            start = time.perf_counter()
+            func(*args, **kwargs)
+            end = time.perf_counter()
+            sort_time.append(end - start)
+        return statistics.mean(sort_time)
 
     return inner
 
@@ -64,21 +71,22 @@ def main(size_arr: int, num_threads: list[int], output_path: str, multiprocess: 
 
     random_arr = [random.randint(0, 100000) for _ in range(size_arr)]
     for cnt_threads in num_threads:
-        sort_time = check_time(sort.parallel_sort)(
+        sort_time = check_time(sort.parallel_sort, 10)(
             random_arr, cnt_threads, PROCESS_POOL if multiprocess else THREAD_POOL
         )
         parallel_sort_time.append(sort_time)
-    base_sort_time = [check_time(sort.base_sort)(random_arr)] * len(parallel_sort_time)
+    base_sort_time = [check_time(sort.base_sort, 3)(random_arr)] * len(parallel_sort_time)
 
     if multiprocess:
-        plt.plot(num_threads, parallel_sort_time, label="process")
+        worker = "process"
     else:
-        plt.plot(num_threads, parallel_sort_time, label="threads")
+        worker = "thread"
+    plt.plot(num_threads, parallel_sort_time, label=worker)
     plt.plot(num_threads, base_sort_time, label="base")
     plt.legend()
     plt.xlabel("num-threads")
     plt.ylabel("time")
-    plt.title(f"sorting time for an array of size {size_arr}")
+    plt.title(f"size_array: {size_arr}")
     plt.savefig(output_path)
 
 
