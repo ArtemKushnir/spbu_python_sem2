@@ -4,7 +4,7 @@ import time
 from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from math import ceil
-from typing import Callable
+from typing import Callable, MutableSequence
 
 from matplotlib import pyplot as plt
 
@@ -14,7 +14,7 @@ PROCESS_POOL = ProcessPoolExecutor
 
 class MergeSort:
     @staticmethod
-    def merge(left: list[int], right: list[int]) -> list[int]:
+    def merge(left: MutableSequence[int], right: MutableSequence[int]) -> list[int]:
         result = []
         while left and right:
             if left[0] >= right[0]:
@@ -37,7 +37,7 @@ class MergeSort:
         right = self.base_sort(array[mid:])
         return self.merge(left, right)
 
-    def supporting_func(self, array_to_merge):
+    def supporting_func(self, array_to_merge: tuple[list[int], list[int]]) -> list[int]:
         return self.merge(array_to_merge[0], array_to_merge[1])
 
     def parallel_sort(self, array: list[int], n_jobs: int, executor_pool: Callable) -> list[int]:
