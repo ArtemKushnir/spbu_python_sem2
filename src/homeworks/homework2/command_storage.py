@@ -1,5 +1,6 @@
-from src.homeworks.homework2.actions import *
 from typing import Sequence
+
+from src.homeworks.homework2.actions import *
 
 
 class ActionIndexError(Exception):
