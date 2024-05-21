@@ -28,6 +28,10 @@ class TestInsertLeft:
         action.undo_action(collection)
         assert collection == initial_state
 
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0).do_action({})
+
 
 class TestInsertRight:
     action = InsertRight
@@ -47,6 +51,10 @@ class TestInsertRight:
         action.do_action(collection)
         action.undo_action(collection)
         assert collection == initial_state
+
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0).do_action({})
 
 
 class TestMoveElement:
@@ -70,6 +78,10 @@ class TestMoveElement:
         action.undo_action(collection)
         assert collection == initial_state
 
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0, 0).do_action({})
+
 
 class TestAddValue:
     action = AddValue
@@ -92,6 +104,10 @@ class TestAddValue:
         action.undo_action(collection)
         assert collection == initial_state
 
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0, 0).do_action({})
+
 
 class TestReverse:
     action = Reverse
@@ -111,6 +127,10 @@ class TestReverse:
         action.do_action(collection)
         action.undo_action(collection)
         assert collection == initial_state
+
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action().do_action({})
 
 
 class TestSwap:
@@ -134,6 +154,10 @@ class TestSwap:
         action.undo_action(collection)
         assert collection == initial_state
 
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0, 0).do_action({})
+
 
 class TestAdd:
     action = Add
@@ -155,6 +179,10 @@ class TestAdd:
         action.undo_action(collection)
         assert collection == initial_state
 
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0).do_action([])
+
 
 class TestPop:
     action = Pop
@@ -175,6 +203,10 @@ class TestPop:
         action.undo_action(collection)
         assert collection == initial_state
 
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0).do_action({})
+
 
 class TestClear:
     action = Clear
@@ -193,6 +225,10 @@ class TestClear:
         action.do_action(collection)
         action.undo_action(collection)
         assert collection == initial_state
+
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action().do_action({})
 
 
 class TestDiscard:
@@ -215,6 +251,10 @@ class TestDiscard:
         action.undo_action(collection)
         assert collection == initial_state
 
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0).do_action([])
+
 
 class TestPopRandom:
     action = PopRandom
@@ -235,6 +275,10 @@ class TestPopRandom:
         action.do_action(collection)
         action.undo_action(collection)
         assert collection == initial_state
+
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action().do_action([])
 
 
 class TestPerformedCommandStorage:
@@ -263,11 +307,6 @@ class TestPerformedCommandStorage:
         storage.cancel()
         assert storage.numbers == initial_state
         assert action not in storage.actions
-
-    def test_raise_exception_collection_error(self):
-        storage = PerformedCommandStorage([])
-        with pytest.raises(CollectionError):
-            storage.apply(Add(88))
 
     def test_raise_exception_action_index_error(self):
         with pytest.raises(ActionIndexError):

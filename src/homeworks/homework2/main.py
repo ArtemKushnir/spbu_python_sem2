@@ -1,14 +1,6 @@
 from typing import Type
 
-from src.homeworks.homework1.registry import Registry
 from src.homeworks.homework2.command_storage import *
-
-
-def _create_registry(registry: Registry, parent_class: Type[Action]) -> Registry:
-    for cls in parent_class.__subclasses__():
-        for action in cls.__subclasses__():
-            registry.register(action.__name__.lower())(action)
-    return registry
 
 
 def create_info(parent_class: Type) -> str:
@@ -25,7 +17,6 @@ def main() -> None:
     print("Write your collection")
     user_collection = eval(input("For example [], {1, 2, 3}: "))
     user_storage: PerformedCommandStorage = PerformedCommandStorage(user_collection)
-    registry = _create_registry(Registry[Action](), Action)
     info = create_info(Action)
     print(info)
     user_request = input("write your request: ")
@@ -40,10 +31,10 @@ def main() -> None:
             else:
                 print("Result:", user_storage.numbers)
         else:
-            action, *arguments = user_request.replace("_", "").split("--")
+            action, *arguments = user_request.split("--")
             arguments = map(int, arguments)
             try:
-                user_storage.apply(registry.dispatch(action.strip())(*arguments))
+                user_storage.apply(ACTION_REGISTRY.dispatch(action.strip())(*arguments))
             except IndexError:
                 print("Indexes are incorrectly specified")
             except ValueError:
