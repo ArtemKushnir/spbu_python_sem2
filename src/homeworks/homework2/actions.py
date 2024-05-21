@@ -4,8 +4,6 @@ T = TypeVar("T", bound=Collection)
 
 
 class Action(Generic[T]):
-    collection_type: type[T]
-
     def do_action(self, numbers: T) -> None:
         raise NotImplementedError
 
@@ -118,12 +116,16 @@ class Add(MutableSetAction):
 
     def __init__(self, value: int) -> None:
         self.value: int = value
+        self.repeat = False
 
     def do_action(self, numbers: MutableSet) -> None:
+        if self.value in numbers:
+            self.repeat = True
         numbers.add(self.value)
 
     def undo_action(self, numbers: MutableSet) -> None:
-        numbers.remove(self.value)
+        if not self.repeat:
+            numbers.remove(self.value)
 
 
 class Pop(MutableSequenceAction):

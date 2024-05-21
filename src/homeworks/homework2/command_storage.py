@@ -1,4 +1,5 @@
 from src.homeworks.homework2.actions import *
+from typing import Sequence
 
 
 class ActionIndexError(Exception):
@@ -9,10 +10,10 @@ class CollectionError(Exception):
     pass
 
 
-class PerformedCommandStorage(Generic[T]):
-    def __init__(self, numbers_collection: T):
+class PerformedCommandStorage:
+    def __init__(self, numbers_collection: Sequence):
         self.actions: list[Action] = []
-        self.numbers: T = numbers_collection
+        self.numbers: Sequence = numbers_collection
 
     def apply(self, action: Action) -> None:
         if not any(isinstance(self.numbers, getattr(cls, "collection_type")) for cls in type(action).__bases__):
