@@ -1,12 +1,9 @@
-from typing import Sequence
-
 from src.homeworks.homework2.actions import *
 
-
 class PerformedCommandStorage:
-    def __init__(self, numbers_collection: Sequence):
+    def __init__(self, numbers_collection: Collection):
         self.actions: list[Action] = []
-        self.numbers: Sequence = numbers_collection
+        self.numbers: Collection = numbers_collection
 
     def apply(self, action: Action) -> None:
         action.do_action(self.numbers)

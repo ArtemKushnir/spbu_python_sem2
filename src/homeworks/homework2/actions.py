@@ -1,8 +1,8 @@
-from typing import Collection, Generic, MutableSequence, MutableSet, Optional, TypeVar
+from abc import abstractmethod
+from typing import MutableSequence, MutableSet, Optional, TypeVar, Generic, Collection
 
 from src.homeworks.homework1.registry import Registry
 
-T = TypeVar("T", bound=Collection)
 
 ACTION_REGISTRY = Registry["Action"]()
 
@@ -15,31 +15,43 @@ class CollectionError(Exception):
     pass
 
 
-class Action(Generic[T]):
-    def do_action(self, numbers: T) -> None:
-        raise NotImplementedError
+class Action:
+    def do_action(self, numbers: Collection) -> None:
+        self.check_type(numbers)
+        self._do_action(numbers)
 
-    def undo_action(self, numbers: T) -> None:
+    def check_type(self, numbers: Collection) -> None:
+        if not hasattr(self, "collection_type"):
+            raise AttributeError("The collection has no attribute 'collection_type'")
+        if not isinstance(numbers, self.collection_type):
+            raise CollectionError("This collection does not support this action")
+
+    @abstractmethod
+    def _do_action(self, numbers: Collection) -> None:
+        raise NotImplemented
+
+    @abstractmethod
+    def undo_action(self, numbers: Collection) -> None:
         raise NotImplementedError
 
 
 class MutableSequenceAction(Action):
     collection_type = MutableSequence
 
-    def do_action(self, numbers: MutableSequence) -> None:
+    def _do_action(self, numbers: Collection) -> None:
         raise NotImplementedError
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         raise NotImplementedError
 
 
 class MutableSetAction(Action):
     collection_type = MutableSet
 
-    def do_action(self, numbers: MutableSet) -> None:
+    def _do_action(self, numbers: Collection) -> None:
         raise NotImplementedError
 
-    def undo_action(self, numbers: MutableSet) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         raise NotImplementedError
 
 
@@ -50,12 +62,10 @@ class InsertLeft(MutableSequenceAction):
     def __init__(self, value: int):
         self.value: int = value
 
-    def do_action(self, numbers: MutableSequence) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         numbers.insert(0, self.value)
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         numbers.pop(0)
 
 
@@ -66,12 +76,10 @@ class InsertRight(MutableSequenceAction):
     def __init__(self, number: int):
         self.number: int = number
 
-    def do_action(self, numbers: MutableSequence) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         numbers.append(self.number)
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         numbers.pop()
 
 
@@ -83,13 +91,11 @@ class MoveElement(MutableSequenceAction):
         self.first_index: int = first_index
         self.second_index: int = second_index
 
-    def do_action(self, numbers: MutableSequence) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         elem = numbers.pop(self.first_index)
         numbers.insert(self.second_index, elem)
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         elem = numbers.pop(self.second_index)
         numbers.insert(self.first_index, elem)
 
@@ -102,12 +108,10 @@ class AddValue(MutableSequenceAction):
         self.index: int = index
         self.value: int = value
 
-    def do_action(self, numbers: MutableSequence) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         numbers[self.index] += self.value
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         numbers[self.index] -= self.value
 
 
@@ -115,12 +119,10 @@ class AddValue(MutableSequenceAction):
 class Reverse(MutableSequenceAction):
     """reverse (expand your collection)"""
 
-    def do_action(self, numbers: MutableSequence) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         numbers.reverse()
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         self.do_action(numbers)
 
 
@@ -132,12 +134,10 @@ class Swap(MutableSequenceAction):
         self.first_index: int = first_index
         self.second_index: int = second_index
 
-    def do_action(self, numbers: MutableSequence) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         numbers[self.first_index], numbers[self.second_index] = numbers[self.second_index], numbers[self.first_index]
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         self.do_action(numbers)
 
 
@@ -149,14 +149,12 @@ class Add(MutableSetAction):
         self.value: int = value
         self.repeat = False
 
-    def do_action(self, numbers: MutableSet) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         if self.value in numbers:
             self.repeat = True
         numbers.add(self.value)
 
-    def undo_action(self, numbers: MutableSet) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         if not self.repeat:
             numbers.remove(self.value)
 
@@ -169,12 +167,10 @@ class Pop(MutableSequenceAction):
         self.index: int = index
         self.value: Optional[int] = None
 
-    def do_action(self, numbers: MutableSequence) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         self.value = numbers.pop(self.index)
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         numbers.insert(self.index, self.value)
 
 
@@ -185,14 +181,12 @@ class Clear(MutableSequenceAction):
     def __init__(self) -> None:
         self.numbers: Optional[MutableSequence] = None
 
-    def do_action(self, numbers: MutableSequence) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         self.numbers = type(numbers)()
         self.numbers.extend(numbers)
         numbers.clear()
 
-    def undo_action(self, numbers: MutableSequence) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         if self.numbers is not None:
             numbers.extend(self.numbers)
 
@@ -205,14 +199,12 @@ class Discard(MutableSetAction):
         self.value: int = value
         self.delete: bool = False
 
-    def do_action(self, numbers: MutableSet) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         if self.value in numbers:
             self.delete = True
         numbers.discard(self.value)
 
-    def undo_action(self, numbers: MutableSet) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         if self.delete:
             numbers.add(self.value)
 
@@ -224,10 +216,8 @@ class PopRandom(MutableSetAction):
     def __init__(self) -> None:
         self.pop_value: Optional[int] = None
 
-    def do_action(self, numbers: MutableSet) -> None:
-        if not isinstance(numbers, self.collection_type):
-            raise CollectionError("This collection does not support this action")
+    def _do_action(self, numbers: Collection) -> None:
         self.pop_value = numbers.pop()
 
-    def undo_action(self, numbers: MutableSet) -> None:
+    def undo_action(self, numbers: Collection) -> None:
         numbers.add(self.pop_value)
