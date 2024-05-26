@@ -23,6 +23,10 @@ class Action:
         self.check_type(numbers)
         self._do_action(numbers)
 
+    def undo_action(self, numbers: MutableSequence[int]) -> None:
+        self.check_type(numbers)
+        self._undo_action(numbers)
+
     @staticmethod
     def check_type(numbers: MutableSequence[int]) -> None:
         if not isinstance(numbers, MutableSequence):
@@ -33,7 +37,7 @@ class Action:
         raise NotImplemented
 
     @abstractmethod
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         raise NotImplementedError
 
 
@@ -47,7 +51,7 @@ class InsertLeft(Action):
     def _do_action(self, numbers: MutableSequence[int]) -> None:
         numbers.insert(0, self.value)
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         numbers.pop(0)
 
 
@@ -61,7 +65,7 @@ class InsertRight(Action):
     def _do_action(self, numbers: MutableSequence[int]) -> None:
         numbers.append(self.number)
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         numbers.pop()
 
 
@@ -77,7 +81,7 @@ class MoveElement(Action):
         elem = numbers.pop(self.first_index)
         numbers.insert(self.second_index, elem)
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         elem = numbers.pop(self.second_index)
         numbers.insert(self.first_index, elem)
 
@@ -93,7 +97,7 @@ class AddValue(Action):
     def _do_action(self, numbers: MutableSequence[int]) -> None:
         numbers[self.index] += self.value
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         numbers[self.index] -= self.value
 
 
@@ -104,7 +108,7 @@ class Reverse(Action):
     def _do_action(self, numbers: MutableSequence[int]) -> None:
         numbers.reverse()
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         self.do_action(numbers)
 
 
@@ -119,7 +123,7 @@ class Swap(Action):
     def _do_action(self, numbers: MutableSequence[int]) -> None:
         numbers[self.first_index], numbers[self.second_index] = numbers[self.second_index], numbers[self.first_index]
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         self.do_action(numbers)
 
 
@@ -134,7 +138,7 @@ class Pop(Action):
     def _do_action(self, numbers: MutableSequence[int]) -> None:
         self.value = numbers.pop(self.index)
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         if self.value is None:
             raise ActionError("The deleted item was not saved")
         numbers.insert(self.index, self.value)
@@ -152,7 +156,7 @@ class Clear(Action):
         self.numbers.extend(numbers)
         numbers.clear()
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         if self.numbers is not None:
             numbers.extend(self.numbers)
 
@@ -168,7 +172,7 @@ class MultiplyValue(Action):
     def _do_action(self, numbers: MutableSequence[int]) -> None:
         numbers[self.index] *= self.value
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         numbers[self.index] //= self.value
 
 
@@ -184,7 +188,7 @@ class DeleteLeft(Action):
             raise ActionError("Collection is empty")
         self.value = numbers.pop(0)
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         if self.value is None:
             raise ActionError("The deleted item was not saved")
         numbers.insert(0, self.value)
@@ -202,7 +206,7 @@ class DeleteRight(Action):
             raise ActionError("Collection is empty")
         self.value = numbers.pop()
 
-    def undo_action(self, numbers: MutableSequence[int]) -> None:
+    def _undo_action(self, numbers: MutableSequence[int]) -> None:
         if self.value is None:
             raise ActionError("The deleted item was not saved")
         numbers.append(self.value)

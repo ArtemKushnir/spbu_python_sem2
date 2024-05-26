@@ -1,14 +1,10 @@
-from typing import Type
-
 from src.homeworks.homework2.command_storage import *
 
 
-def create_info(parent_class: Type) -> str:
-    info = ""
-    cnt = 1
-    for cls in parent_class.__subclasses__():
+def create_info() -> str:
+    info = "1. exit (end the program)\n2. info (get info about actions)\n"
+    for cnt, cls in enumerate(ACTION_REGISTRY._registry_storage.values(), start=3):
         info += f"{cnt}. {cls.__doc__}\n"
-        cnt += 1
     return info
 
 
@@ -16,7 +12,7 @@ def main() -> None:
     print("Write your collection")
     user_collection = eval(input("For example [], [1, 2, 3]: "))
     user_storage: PerformedCommandStorage = PerformedCommandStorage(user_collection)
-    info = create_info(Action)
+    info = create_info()
     print(info)
     user_request = input("write your request: ")
     while user_request != "exit":

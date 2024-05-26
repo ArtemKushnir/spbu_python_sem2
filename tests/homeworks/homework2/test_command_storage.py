@@ -6,7 +6,7 @@ from hypothesis import given
 
 from src.homeworks.homework2.main import *
 
-INFO = create_info(Action)
+INFO = create_info()
 
 
 class TestInsertLeft:
@@ -28,7 +28,11 @@ class TestInsertLeft:
         action.undo_action(collection)
         assert collection == initial_state
 
-    def test_raise_exception_collection_error(self):
+    def test_raise_exception_collection_error_do(self):
+        with pytest.raises(CollectionError):
+            self.action(0).do_action({})
+
+    def test_raise_exception_collection_error_undo(self):
         with pytest.raises(CollectionError):
             self.action(0).do_action({})
 
@@ -52,7 +56,11 @@ class TestInsertRight:
         action.undo_action(collection)
         assert collection == initial_state
 
-    def test_raise_exception_collection_error(self):
+    def test_raise_exception_collection_error_do(self):
+        with pytest.raises(CollectionError):
+            self.action(0).do_action({})
+
+    def test_raise_exception_collection_error_undo(self):
         with pytest.raises(CollectionError):
             self.action(0).do_action({})
 
@@ -78,7 +86,11 @@ class TestMoveElement:
         action.undo_action(collection)
         assert collection == initial_state
 
-    def test_raise_exception_collection_error(self):
+    def test_raise_exception_collection_error_do(self):
+        with pytest.raises(CollectionError):
+            self.action(0, 0).do_action({})
+
+    def test_raise_exception_collection_error_undo(self):
         with pytest.raises(CollectionError):
             self.action(0, 0).do_action({})
 
@@ -104,7 +116,11 @@ class TestAddValue:
         action.undo_action(collection)
         assert collection == initial_state
 
-    def test_raise_exception_collection_error(self):
+    def test_raise_exception_collection_error_do(self):
+        with pytest.raises(CollectionError):
+            self.action(0, 0).do_action({})
+
+    def test_raise_exception_collection_error_undo(self):
         with pytest.raises(CollectionError):
             self.action(0, 0).do_action({})
 
@@ -128,7 +144,11 @@ class TestReverse:
         action.undo_action(collection)
         assert collection == initial_state
 
-    def test_raise_exception_collection_error(self):
+    def test_raise_exception_collection_error_do(self):
+        with pytest.raises(CollectionError):
+            self.action().do_action({})
+
+    def test_raise_exception_collection_error_undo(self):
         with pytest.raises(CollectionError):
             self.action().do_action({})
 
@@ -154,7 +174,11 @@ class TestSwap:
         action.undo_action(collection)
         assert collection == initial_state
 
-    def test_raise_exception_collection_error(self):
+    def test_raise_exception_collection_error_do(self):
+        with pytest.raises(CollectionError):
+            self.action(0, 0).do_action({})
+
+    def test_raise_exception_collection_error_undo(self):
         with pytest.raises(CollectionError):
             self.action(0, 0).do_action({})
 
@@ -178,7 +202,11 @@ class TestPop:
         action.undo_action(collection)
         assert collection == initial_state
 
-    def test_raise_exception_collection_error(self):
+    def test_raise_exception_collection_error_do(self):
+        with pytest.raises(CollectionError):
+            self.action(0).do_action({})
+
+    def test_raise_exception_collection_error_undo(self):
         with pytest.raises(CollectionError):
             self.action(0).do_action({})
 
@@ -201,7 +229,11 @@ class TestClear:
         action.undo_action(collection)
         assert collection == initial_state
 
-    def test_raise_exception_collection_error(self):
+    def test_raise_exception_collection_error_do(self):
+        with pytest.raises(CollectionError):
+            self.action().do_action({})
+
+    def test_raise_exception_collection_error_undo(self):
         with pytest.raises(CollectionError):
             self.action().do_action({})
 
