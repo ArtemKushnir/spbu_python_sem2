@@ -7,15 +7,14 @@ def create_info(parent_class: Type) -> str:
     info = ""
     cnt = 1
     for cls in parent_class.__subclasses__():
-        for action in cls.__subclasses__():
-            info += f"{cnt}. {action.__doc__}\n"
-            cnt += 1
+        info += f"{cnt}. {cls.__doc__}\n"
+        cnt += 1
     return info
 
 
 def main() -> None:
     print("Write your collection")
-    user_collection = eval(input("For example [], {1, 2, 3}: "))
+    user_collection = eval(input("For example [], [1, 2, 3]: "))
     user_storage: PerformedCommandStorage = PerformedCommandStorage(user_collection)
     info = create_info(Action)
     print(info)

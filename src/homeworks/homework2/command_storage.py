@@ -1,9 +1,10 @@
 from src.homeworks.homework2.actions import *
 
+
 class PerformedCommandStorage:
-    def __init__(self, numbers_collection: Collection):
+    def __init__(self, numbers_collection: MutableSequence[int]):
         self.actions: list[Action] = []
-        self.numbers: Collection = numbers_collection
+        self.numbers: MutableSequence[int] = numbers_collection
 
     def apply(self, action: Action) -> None:
         action.do_action(self.numbers)

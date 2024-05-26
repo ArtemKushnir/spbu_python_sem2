@@ -159,31 +159,6 @@ class TestSwap:
             self.action(0, 0).do_action({})
 
 
-class TestAdd:
-    action = Add
-
-    @pytest.mark.parametrize(
-        "collection,new_value,expected",
-        [(set(), 99, {99}), ({1, 2, 3}, 1, {1, 2, 3}), ({5}, 1000, {1000, 5}), ({100, 10, 25}, 0, {100, 10, 25, 0})],
-    )
-    def test_do(self, collection, new_value, expected):
-        action = self.action(new_value)
-        action.do_action(collection)
-        assert collection == expected
-
-    @given(collection=st.sets(st.integers(), min_size=0, max_size=1000))
-    def test_undo(self, collection):
-        initial_state = collection.copy()
-        action = self.action(randint(-1000, 1000))
-        action.do_action(collection)
-        action.undo_action(collection)
-        assert collection == initial_state
-
-    def test_raise_exception_collection_error(self):
-        with pytest.raises(CollectionError):
-            self.action(0).do_action([])
-
-
 class TestPop:
     action = Pop
 
@@ -231,63 +206,13 @@ class TestClear:
             self.action().do_action({})
 
 
-class TestDiscard:
-    action = Discard
-
-    @pytest.mark.parametrize(
-        "collection,value,expected",
-        [({99}, 99, set()), ({1, 2, 3}, 1, {2, 3}), ({1, 2, 3}, 1000, {1, 2, 3}), ({100, 10, 25}, 10, {100, 25})],
-    )
-    def test_do(self, collection, value, expected):
-        action = self.action(value)
-        action.do_action(collection)
-        assert collection == expected
-
-    @given(collection=st.sets(st.integers(), min_size=0, max_size=1000))
-    def test_undo(self, collection):
-        initial_state = collection.copy()
-        action = self.action(randint(-1000, 1000))
-        action.do_action(collection)
-        action.undo_action(collection)
-        assert collection == initial_state
-
-    def test_raise_exception_collection_error(self):
-        with pytest.raises(CollectionError):
-            self.action(0).do_action([])
-
-
-class TestPopRandom:
-    action = PopRandom
-
-    @pytest.mark.parametrize("collection", [{99}, {1, 2, 3}, {100, 10, 25, 0, 1, 2}])
-    def test_do(self, collection):
-        initial_collection = collection.copy()
-        action = self.action()
-        action.do_action(collection)
-        assert len(collection) == len(initial_collection) - 1
-        for elem in collection:
-            assert elem in initial_collection
-
-    @given(collection=st.sets(st.integers(), min_size=1, max_size=1000))
-    def test_undo(self, collection):
-        initial_state = collection.copy()
-        action = self.action()
-        action.do_action(collection)
-        action.undo_action(collection)
-        assert collection == initial_state
-
-    def test_raise_exception_collection_error(self):
-        with pytest.raises(CollectionError):
-            self.action().do_action([])
-
-
 class TestPerformedCommandStorage:
     @pytest.mark.parametrize(
         "collection,action,expected",
         [
             ([1, 2, 3], AddValue(1, 100), [1, 102, 3]),
             ([], InsertRight(10), [10]),
-            ({100, 300, 2444}, Add(0), {0, 100, 300, 2444}),
+            ([1, 2, 3], Reverse(), [3, 2, 1]),
         ],
     )
     def test_apply(self, collection, action, expected):
@@ -298,7 +223,7 @@ class TestPerformedCommandStorage:
 
     @pytest.mark.parametrize(
         "collection,action",
-        [([1, 2, 3], AddValue(1, 100)), ([], InsertRight(10)), ({100, 300, 2444}, Add(0))],
+        [([1, 2, 3], AddValue(1, 100)), ([], InsertRight(10)), ([1, 2, 3], Reverse())],
     )
     def test_cancel(self, collection, action):
         initial_state = collection.copy()
@@ -311,6 +236,84 @@ class TestPerformedCommandStorage:
     def test_raise_exception_action_index_error(self):
         with pytest.raises(ActionIndexError):
             PerformedCommandStorage([]).cancel()
+
+
+class TestMultiplyValue:
+    action = MultiplyValue
+
+    @pytest.mark.parametrize(
+        "collection,i,value,expected",
+        [([11, 1], 0, 1, [11, 1]), ([999], 0, -999, [-999 * 999]), ([1, 2, 3, 4, 5, 6], 3, 500, [1, 2, 3, 2000, 5, 6])],
+    )
+    def test_do(self, collection, i, value, expected):
+        action = self.action(i, value)
+        action.do_action(collection)
+        assert collection == expected
+
+    @given(collection=st.lists(st.integers(), min_size=1, max_size=1000))
+    def test_undo(self, collection):
+        initial_state = collection.copy()
+        i, value = randint(0, len(collection) - 1), randint(-1000, 1000)
+        action = self.action(i, value)
+        action.do_action(collection)
+        action.undo_action(collection)
+        assert collection == initial_state
+
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action(0, 0).do_action({})
+
+
+class TestDeleteLeft:
+    action = DeleteLeft
+
+    @pytest.mark.parametrize("collection,expected", [([99], []), ([1, 2, 3], [2, 3]), ([5, 5, 5, 5], [5, 5, 5])])
+    def test_do(self, collection, expected):
+        action = self.action()
+        action.do_action(collection)
+        assert collection == expected
+
+    @given(collection=st.lists(st.integers(), min_size=1, max_size=1000))
+    def test_undo(self, collection):
+        initial_state = collection.copy()
+        action = self.action()
+        action.do_action(collection)
+        action.undo_action(collection)
+        assert collection == initial_state
+
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action().do_action({})
+
+    def test_raise_exception_action_error(self):
+        with pytest.raises(ActionError):
+            self.action()._do_action([])
+
+
+class TestDeleteRight:
+    action = DeleteRight
+
+    @pytest.mark.parametrize("collection,expected", [([99], []), ([1, 2, 3], [1, 2]), ([5, 5, 5, 5], [5, 5, 5])])
+    def test_do(self, collection, expected):
+        action = self.action()
+        action.do_action(collection)
+        assert collection == expected
+
+    @given(collection=st.lists(st.integers(), min_size=1, max_size=1000))
+    def test_undo(self, collection):
+        initial_state = collection.copy()
+        action = self.action()
+        action.do_action(collection)
+        action.undo_action(collection)
+        assert collection == initial_state
+
+    def test_raise_exception_collection_error(self):
+        with pytest.raises(CollectionError):
+            self.action().do_action({})
+
+    def test_raise_exception_action_error(self):
+        with pytest.raises(ActionError):
+            self.action()._do_action([])
 
 
 @pytest.mark.parametrize(
@@ -327,8 +330,8 @@ class TestPerformedCommandStorage:
             + "\nResult: [0]\nResult: [100, 0]\nResult: [100, 99]\nResult: [100, 0]\nResult: [0, 100]\n",
         ),
         (
-            ["set()", "add --1", "pop_random", "cancel", "exit"],
-            "Write your collection\n" + INFO + "\nResult: {1}\nResult: set()\nResult: {1}\n",
+            ["[0, 0, 0]", "insert_right --1", "reverse", "exit"],
+            "Write your collection\n" + INFO + "\nResult: [0, 0, 0, 1]\nResult: [1, 0, 0, 0]\n",
         ),
     ],
 )
@@ -345,7 +348,7 @@ def test_main_scenario(actions, expected, monkeypatch, capsys):
         (["[1, 2, 3]", "pop --99", "exit"], "Indexes are incorrectly specified"),
         (["[]", "pip --0", "exit"], "Invalid request"),
         (["[]", "insert_left --0 --1", "exit"], "The request has an incorrect number of arguments"),
-        (["[]", "add --0", "exit"], "This collection does not support this action"),
+        (["set()", "insert_left --0", "exit"], "This collection does not support this action"),
         (["[]", "cancel", "exit"], "No action was performed"),
     ],
 )
