@@ -1,4 +1,4 @@
-from abc import abstractmethod
+import abc
 from typing import MutableSequence, Optional
 
 from src.homeworks.homework1.registry import Registry
@@ -18,7 +18,7 @@ class ActionError(Exception):
     pass
 
 
-class Action:
+class Action(metaclass=abc.ABCMeta):
     def do_action(self, numbers: MutableSequence[int]) -> None:
         self.check_type(numbers)
         self._do_action(numbers)
@@ -32,11 +32,11 @@ class Action:
         if not isinstance(numbers, MutableSequence):
             raise CollectionError("This collection does not support this action")
 
-    @abstractmethod
+    @abc.abstractmethod
     def _do_action(self, numbers: MutableSequence[int]) -> None:
         raise NotImplemented
 
-    @abstractmethod
+    @abc.abstractmethod
     def _undo_action(self, numbers: MutableSequence[int]) -> None:
         raise NotImplementedError
 
