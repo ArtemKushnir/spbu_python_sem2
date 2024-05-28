@@ -20,8 +20,6 @@ def parse_json_dict_args(instance: T, name: str) -> Any:
     json_value = json_dict.get(name, None)
     if json_value is None:
         raise JsonAttributeError(f"json dict doesnt have {name}")
-    elif isinstance(json_value, dict):
-        return instance.__annotations__[name].bind_lazy_dict(json_value)
     elif isinstance(json_value, list) and len(json_value) == 1 and isinstance(json_value[0], dict):
         return instance.__annotations__[name].bind_lazy_dict(json_value[0])
     elif isinstance(json_value, list):
@@ -32,6 +30,10 @@ def parse_json_dict_args(instance: T, name: str) -> Any:
             else:
                 result.append(arg)
         return result
+    elif isinstance(json_value, dict):
+        annotations = instance.__annotations__
+        if name in annotations:
+            return annotations[name].bind_lazy_dict(json_value)
     return json_value
 
 

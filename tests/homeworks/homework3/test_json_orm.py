@@ -37,6 +37,7 @@ class TestJsonORM:
         a_dict = {"a1": a1, "a2": a2, "b": b_dict}
         test_a = A.bind_lazy_dict(a_dict)
         assert test_a.a1 == a1 and test_a.a2 == a2
+        assert isinstance(test_a.b, B)
         assert test_a.b.b1 == b1 and test_a.b.b2 == b2
         assert test_a.json_dict == a_dict
 
