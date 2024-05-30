@@ -1,7 +1,7 @@
 import hypothesis.strategies as st
 from hypothesis import given, settings
 
-from src.homeworks.homework4.sort import PROCESS_POOL, THREAD_POOL, MergeSort
+from src.homeworks.homework4.sort import MergeSort, ProcessPoolExecutor, ThreadPoolExecutor
 
 
 class TestMergeSort:
@@ -24,26 +24,26 @@ class TestMergeSort:
 
     @given(st.lists(st.integers()), st.integers(1, 1000))
     def test_thread_sort_first_realisation(self, test_array, n_jobs):
-        actual = self.sort.parallel_sort_first_realisation(test_array, n_jobs, THREAD_POOL)
+        actual = self.sort.parallel_sort_first_implementation(test_array, n_jobs, ThreadPoolExecutor)
         test_array.sort()
         assert actual == test_array
 
     @given(st.lists(st.integers()), st.integers(1, 100))
     @settings(deadline=10**10)
     def test_process_sort_first_realisation(self, test_array, n_jobs):
-        actual = self.sort.parallel_sort_first_realisation(test_array, n_jobs, PROCESS_POOL)
+        actual = self.sort.parallel_sort_first_implementation(test_array, n_jobs, ProcessPoolExecutor)
         test_array.sort()
         assert actual == test_array
 
     @given(st.lists(st.integers()), st.integers(1, 1000))
     def test_thread_sort_second_realisation(self, test_array, n_jobs):
-        actual = self.sort.parallel_sort_second_realisation(test_array, n_jobs, THREAD_POOL)
+        actual = self.sort.parallel_sort_second_implementation(test_array, n_jobs, ThreadPoolExecutor)
         test_array.sort()
         assert actual == test_array
 
     @given(st.lists(st.integers()), st.integers(1, 100))
     @settings(deadline=10**10)
     def test_process_sort_second_realisation(self, test_array, n_jobs):
-        actual = self.sort.parallel_sort_second_realisation(test_array, n_jobs, PROCESS_POOL)
+        actual = self.sort.parallel_sort_second_implementation(test_array, n_jobs, ProcessPoolExecutor)
         test_array.sort()
         assert actual == test_array
