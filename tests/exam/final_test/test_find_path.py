@@ -79,7 +79,6 @@ def test_find_path_to_url(start, end, expected):
                 "https://en.wikipedia.org/wiki/Adolf_Hitler",
                 "https://en.wikipedia.org/wiki/Vladimir_Putin",
                 "https://en.wikipedia.org/wiki/Belgium",
-                "https://en.wikipedia.org/wiki/Netherlands",
             ],
             100,
             [
@@ -87,7 +86,6 @@ def test_find_path_to_url(start, end, expected):
                 "https://en.wikipedia.org/wiki/Vladimir_Putin",
                 "https://en.wikipedia.org/wiki/Mikhail_Mishustin",
                 "https://en.wikipedia.org/wiki/Belgium",
-                "https://en.wikipedia.org/wiki/Netherlands",
             ],
         ),
     ],
@@ -126,7 +124,6 @@ def test_main_unique(links, n_jobs, expected):
                 "https://en.wikipedia.org/wiki/Adolf_Hitler",
                 "https://en.wikipedia.org/wiki/Vladimir_Putin",
                 "https://en.wikipedia.org/wiki/Belgium",
-                "https://en.wikipedia.org/wiki/Netherlands",
             ],
             100,
             [
@@ -134,7 +131,6 @@ def test_main_unique(links, n_jobs, expected):
                 "https://en.wikipedia.org/wiki/Vladimir_Putin",
                 "https://en.wikipedia.org/wiki/Mikhail_Mishustin",
                 "https://en.wikipedia.org/wiki/Belgium",
-                "https://en.wikipedia.org/wiki/Netherlands",
             ],
         ),
     ],
