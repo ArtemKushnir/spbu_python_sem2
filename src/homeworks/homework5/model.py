@@ -71,6 +71,10 @@ class HardBot(Bot):
         return worse_score
 
 
+class MultiPlayer(Player):
+    pass
+
+
 @dataclass
 class Session:
     name: str
@@ -116,6 +120,7 @@ class GameModel:
         self.second_player: Optional[Player] = None
         self.current_player: Optional[Player] = None
         self.current_session: Observable = Observable()
+        self.active: bool = False
 
     def make_bot_move(self) -> None:
         if isinstance(self.current_player, EasyBot):
@@ -127,6 +132,7 @@ class GameModel:
         if coord in self.board.free_cells and self.current_player is not None:
             self.board.make_move(coord, self.current_player.sign)
             if check_win(self.board.get_board(), self.current_player.sign):
+                self.active = False
                 self.current_session.value = Session("game_result", self.current_player.name)
                 return
             if len(self.board.free_cells) == 0:
@@ -139,8 +145,10 @@ class GameModel:
             self.make_bot_move()
 
     def choose_side(self, type_game: str) -> None:
-        if type_game == "easy":
-            players: tuple[Player, Player] = (Player("Player1"), EasyBot("Easy bot"))
+        if type_game == "multiplayer":
+            players: tuple[Player, Player] = (MultiPlayer("You"), MultiPlayer("Player2"))
+        elif type_game == "easy":
+            players = (Player("Player1"), EasyBot("Easy bot"))
         elif type_game == "hard":
             players = (Player("Player1"), HardBot("Hard bot"))
         else:
@@ -151,6 +159,7 @@ class GameModel:
         self.first_player = player1
         self.second_player = player2
         self.current_player = player1
+        self.active = True
         self.current_session.value = Session("game_field", (player1, player2))
         self.make_bot_move()
 

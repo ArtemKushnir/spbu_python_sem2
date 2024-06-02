@@ -1,8 +1,10 @@
 import abc
+import socket
+from threading import Thread
 from tkinter import Tk
 from typing import Optional
 
-from src.homeworks.homework5.model import GameModel, Player, Session
+from src.homeworks.homework5.model import GameModel, MultiPlayer, Player, Session
 from src.homeworks.homework5.view import *
 
 
@@ -57,6 +59,7 @@ class MainViewModel(IViewModel):
         view.hard_bot_button.config(command=lambda: self._model.choose_side("hard"))
         view.easy_bot_button.config(command=lambda: self._model.choose_side("easy"))
         view.one_pc_button.config(command=lambda: self._model.choose_side("on one pc"))
+        view.multiplayer_button.config(command=lambda: self._model.choose_side("multiplayer"))
 
     def start(self, root: Tk, data: Any) -> ttk.Frame:
         frame = MainView(root)
@@ -67,6 +70,9 @@ class MainViewModel(IViewModel):
 class PlayingFieldViewModel(IViewModel):
     def _bind(self, view: PlayingFieldView, player1: Player, player2: Player) -> None:
         view.set_greetings(player1.name, player1.sign, player2.name, player2.sign)
+        if isinstance(player1, MultiPlayer) and isinstance(player2, MultiPlayer):
+            self._bind_multiplayer(view)
+            return
 
         buttons = view.buttons_list
         game_board = self._model.board
@@ -74,6 +80,34 @@ class PlayingFieldViewModel(IViewModel):
             button = buttons[i]
             game_board.cells[i].add_callback(lambda sign, curr_button=button: curr_button.config(text=sign))
             com = lambda coord=i: self._model.make_move(coord)
+            button.config(command=com)
+
+    def _bind_multiplayer(self, view: PlayingFieldView) -> None:
+        def send_message(client_socket: socket.socket, coord: int) -> None:
+            client_socket.sendall(bytes(f"{coord} {client_socket.getsockname()[-1]}", encoding="UTF-8"))
+
+        def get_data(client_sock: socket.socket) -> None:
+            while True:
+                if not self._model.active:
+                    break
+                data = client_sock.recv(1024)
+                if data:
+                    num_cell = int(data.decode())
+                    self._model.make_move(num_cell)
+            client_sock.close()
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(("localhost", 8888))
+
+        player_thread = Thread(target=get_data, args=(sock,))
+        player_thread.start()
+
+        buttons = view.buttons_list
+        game_board = self._model.board
+        for i in range(9):
+            button = buttons[i]
+            game_board.cells[i].add_callback(lambda sign, curr_button=button: curr_button.config(text=sign))
+            com = lambda coord=i: send_message(sock, coord)
             button.config(command=com)
 
     def start(self, root: Tk, data: Any) -> ttk.Frame:

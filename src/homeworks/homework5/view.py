@@ -6,6 +6,7 @@ class MainView(ttk.Frame):
     HARD_BOT = "Play with hard bot"
     EASY_BOT = "Play with easy bot"
     ONE_PC = "Play on one pc"
+    MULTIPLAYER = "Play multiplayer"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -13,10 +14,12 @@ class MainView(ttk.Frame):
         self.hard_bot_button = Button(self, text=self.HARD_BOT, width=15, height=3)
         self.easy_bot_button = Button(self, text=self.EASY_BOT, height=3)
         self.one_pc_button = Button(self, text=self.ONE_PC, height=3)
+        self.multiplayer_button = Button(self, text=self.MULTIPLAYER, height=3)
 
         self.hard_bot_button.grid(row=0, column=1, sticky="NSEW")
         self.easy_bot_button.grid(row=1, column=1, sticky="NSEW")
         self.one_pc_button.grid(row=2, column=1, sticky="NSEW")
+        self.multiplayer_button.grid(row=3, column=1, sticky="NSEW")
 
 
 class PlayingFieldView(ttk.Frame):
