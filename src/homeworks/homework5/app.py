@@ -1,7 +1,7 @@
 from tkinter import Tk
 
-from model import GameModel
-from viewmodel import ViewModel
+from src.homeworks.homework5.model import GameModel
+from src.homeworks.homework5.viewmodel import ViewModel
 
 
 class App:
@@ -11,8 +11,8 @@ class App:
 
     def __init__(self) -> None:
         self._root = self._setup_root()
-        self._bank_model = GameModel()
-        self._viewmodel = ViewModel(self._bank_model, self._root)
+        self._game_model = GameModel()
+        self._viewmodel = ViewModel(self._game_model, self._root)
 
     def _setup_root(self) -> Tk:
         root = Tk()
